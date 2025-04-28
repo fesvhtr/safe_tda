@@ -38,7 +38,6 @@ def load_dataset(json_file, safe_img_dir, nsfw_img_dir):
         nsfw_text = item["nsfw"]
         coco_id = item["coco_id"]
         nsfw_id = "flux_" + str(item["incremental_id"])
-        
         safe_img_path = os.path.join(safe_img_dir, f"{coco_id}.jpg")
         nsfw_img_path = os.path.join(nsfw_img_dir, f"{nsfw_id}.png")
         if os.path.exists(safe_img_path):
@@ -121,7 +120,7 @@ class ImageDataset(Dataset):
         image = Image.open(self.image_paths[idx])
         return self.preprocess(image)
 
-def image_to_text_retrieval(model, preprocess, tokenizer, texts, images, k_values=[1, 5, 20], batch_size=32):
+def text_to_image_retrieval(model, preprocess, tokenizer, texts, images, k_values=[1, 5, 20], batch_size=32):
     """
     Perform text-to-image retrieval and calculate R@K metrics with batch processing.
     """
@@ -413,8 +412,8 @@ def main():
     json_file = "/home/muzammal/Projects/safe_proj/long_safe_clip/dataset/visu/ViSU-Text_test.json"
     safe_img_dir = "/home/muzammal/Projects/safe_proj/long_safe_clip/dataset/visu/image/test_coco"  # Update with actual path
     unsafe_image_dir = "/home/muzammal/Projects/safe_proj/long_safe_clip/dataset/visu/image/test_nsfw"  # Update with actual path
-    model_name = "longclip"
-    task = ["nsfw_retrieval"]
+    model_name = "longclip"  # or "longclip"
+    task = ["nsfw_retrieval"]  # Specify the tasks to run
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # Load data
@@ -440,10 +439,8 @@ def main():
     model.eval()
     
     if 'safe_retrieval' in task:
-        # Perform safe retrieval
         safe_retrieval(model, preprocess, tokenizer, safe_texts, safe_image_paths, batch_size=batch_size)
-    elif 'nsfw_retrieval' in task:
-        # Perform NSFW retrieval
+    if 'nsfw_retrieval' in task:
         nsfw_retrieval(model, preprocess, tokenizer, pairs, batch_size=batch_size)
     
 
