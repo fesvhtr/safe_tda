@@ -47,3 +47,6 @@ model_ts*.txt
 _darcs
 .history
 runs/
+
+
+data/dataset
