@@ -19,9 +19,9 @@ def compute_persistence(points, simplex="rips", max_edge_length=1.5, max_dimensi
     else:
         raise ValueError("Unsupported simplex type. Use 'rips' or 'witness'.")
 
-    print("Computing persistence...")
+    # print("Computing persistence...")
     persistence = simplex_tree.persistence()
-    print("Finished computing persistence.")
+    # print("Finished computing persistence.")
     return persistence, simplex_tree
 
 
@@ -91,7 +91,7 @@ def plot_betti_curves(thresholds, betti_curves_data, title="Persistence Diagram"
 
 def analyze_and_plot_tda(embeddings, label, complex="rips", max_filt_scale=1.5, max_hom_dim=2, threshold_count=100,
                          percent_of_landmarks=0.1, plot=True):
-    print(f"\n--- Analyzing {label} Embeddings ({embeddings.shape[0]} samples) ---")
+    # print(f"\n--- Analyzing {label} Embeddings ({embeddings.shape[0]} samples) ---")
     landmarks, witnesses = None, None
     if complex == "witness":
         witnesses = embeddings
@@ -107,26 +107,22 @@ def analyze_and_plot_tda(embeddings, label, complex="rips", max_filt_scale=1.5, 
                                                     max_dimension=max_hom_dim,
                                                     landmarks=landmarks,
                                                     witnesses=witnesses)
-    if persistence_intervals:
-        print("\n--- Persistence Intervals for Dim 3 (Unsafe Text) ---")
-        dim3_intervals = [(b, d) for dim, (b, d) in persistence_intervals if dim == 3]
-        if dim3_intervals:
-            print(f"Found {len(dim3_intervals)} Betti 3 features:")
-            for birth, death in dim3_intervals:
-                death_str = f"{death:.4f}" if not np.isinf(death) else "inf"
-                print(f"  [{birth:.4f}, {death_str})")
-        else:
-            print("No Betti 3 features found in persistence intervals.")
+    # Note: uncomment this to see the exact persistence intervals
+    # if persistence_intervals:
+    #     print("\n--- Persistence Intervals for Dim 3 (Unsafe Text) ---")
+    #     dim3_intervals = [(b, d) for dim, (b, d) in persistence_intervals if dim == 3]
+    #     if dim3_intervals:
+    #         print(f"Found {len(dim3_intervals)} Betti 3 features:")
+    #         for birth, death in dim3_intervals:
+    #             death_str = f"{death:.4f}" if not np.isinf(death) else "inf"
+    #             print(f"  [{birth:.4f}, {death_str})")
+    #     else:
+    #         print("No Betti 3 features found in persistence intervals.")
     threshold_values = np.linspace(0, max_filt_scale, threshold_count)
     betti_data = compute_betti_curves(st, persistence_intervals, threshold_values)
 
-    print(f"\nPlotting {label} results...")
+    # print(f"\nPlotting {label} results...")
     if plot:
-        plt.figure(figsize=(12, 6))
-        plt.subplot(1, 2, 1)
         plot_persistence_diagram(persistence_intervals, title=f"Persistence Diagram ({label})")
-        plt.subplot(1, 2, 2)
         plot_betti_curves(threshold_values, betti_data, title=f"Betti Curve ({label})")
-        plt.tight_layout()
-        plt.show()
     return persistence_intervals, betti_data

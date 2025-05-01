@@ -50,3 +50,5 @@ runs/
 
 
 data/dataset
+data/cache
+data/weights

@@ -1,7 +1,7 @@
 import random
 import json
 
-def generate_random_groups(total=5000, group_size=50, num_groups=250):
+def generate_random_groups(total, group_size, num_groups):
     groups = []
     for _ in range(num_groups):
         group = random.sample(range(total), group_size)
@@ -9,10 +9,13 @@ def generate_random_groups(total=5000, group_size=50, num_groups=250):
     return groups
 
 # 生成随机组
-random_groups = generate_random_groups()
+total = 150000
+group_size = 75
+num_groups = 10000
+random_groups = generate_random_groups(total, group_size, num_groups)
 
 # 保存为 JSON 文件
-output_path = r"H:\ProjectsPro\safe_tda\data\dataset\test_patch_id.json"
+output_path = rf"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\train_patch_id_ss{group_size}g{num_groups}.json"
 with open(output_path, "w") as f:
     json.dump(random_groups, f, indent=2)
 

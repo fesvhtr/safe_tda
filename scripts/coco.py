@@ -85,10 +85,12 @@ def download_by_id(json_file, save_dir):
         url_prefix = "http://images.cocodataset.org/val2014/COCO_val2014_"
         url_suffix = ".jpg"
         # fill coco_id with 12 digits with leading zeros
-        coco_id = str(coco_id).zfill(12)
+        # coco_id = str(coco_id).zfill(12)
         url = url_prefix + coco_id + url_suffix
         # create save path
         save_path = os.path.join(save_dir, f"{coco_id}.jpg")
+        if os.path.exists(save_path):
+            continue
         # download image
         download_tasks.append((url, save_path))
     # 使用线程池并行下载
@@ -99,7 +101,7 @@ def download_by_id(json_file, save_dir):
 
 if __name__ == "__main__":
     # 设置输出目录
-    output_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_coco"
+    output_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_coco"
     json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train_5K.json"
     # 启动下载，可以设置max_images参数来限制下载数量
     # 例如: download_coco_images(output_dir, max_images=100)

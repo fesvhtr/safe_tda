@@ -17,7 +17,7 @@ class TextDataset(Dataset):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        return self.tokenizer([self.texts[idx]])
+        return self.tokenizer([self.texts[idx]], truncate=True)
 
 
 class ImageDataset(Dataset):
@@ -43,6 +43,7 @@ def load_dataset(json_file, safe_img_dir, nsfw_img_dir):
         safe_texts: List of safe text descriptions
         safe_image_paths: List of paths to corresponding safe images
     """
+    print("Loading dataset...")
     with open(json_file, 'r') as f:
         data = json.load(f)
 
@@ -58,12 +59,18 @@ def load_dataset(json_file, safe_img_dir, nsfw_img_dir):
         nsfw_id = "nsfw_" + str(item["incremental_id"])
         safe_img_path = os.path.join(safe_img_dir, f"{coco_id}.jpg")
         nsfw_img_path = os.path.join(nsfw_img_dir, f"{nsfw_id}.png")
+
+        safe_texts.append(safe_text)
         if os.path.exists(safe_img_path):
-            safe_texts.append(safe_text)
             safe_image_paths.append(safe_img_path)
+
+        nsfw_texts.append(nsfw_text)
         if os.path.exists(nsfw_img_path):
-            nsfw_texts.append(nsfw_text)
             nsfw_image_paths.append(nsfw_img_path)
+    if len(safe_texts) != len(safe_image_paths):
+        print(f"Warning: safe_text has no corresponding image.")
+    if len(nsfw_texts) != len(nsfw_image_paths):
+        print(f"Warning: nsfw_text has no corresponding image.")
     print(f"Loaded {len(safe_texts)} safe texts and {len(nsfw_texts)} NSFW texts")
     print(f"Loaded {len(safe_image_paths)} safe images and {len(nsfw_image_paths)} NSFW images")
 
@@ -84,6 +91,7 @@ def load_dataset_with_pairs(json_file, safe_img_dir, nsfw_img_dir):
         all_texts: List of all texts (safe + NSFW)
         all_image_paths: List of all image paths (safe + NSFW)
     """
+    print("Loading paired dataset...")
     with open(json_file, 'r') as f:
         data = json.load(f)
 
@@ -118,6 +126,7 @@ def load_dataset_with_pairs(json_file, safe_img_dir, nsfw_img_dir):
 
 
 def extract_text_embeddings(texts, clip_model, tokenizer, device="cuda", batch_size=32):
+    print("Extracting TEXT embeddings...")
     text_dataset = TextDataset(texts, tokenizer)
     text_dataloader = DataLoader(text_dataset, batch_size=batch_size)
     text_features = []
@@ -149,3 +158,33 @@ def extract_image_embeddings(image_paths, clip_model, preprocess, device="cuda",
     image_features = F.normalize(image_features, dim=1)
     print(f"image_features shape: {image_features.shape}")
     return image_features.cpu().numpy()
+
+
+def load_embeddings(clip_model, clip_tokenizer, device, split="test", modality="text"):
+    # load the raw dataset
+    if split == "train5k":
+        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train_5k.json"
+        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_coco_5k"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_FLUX_Unsensored_5k"
+    elif split == "train":
+        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train.json"
+        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_coco"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_FLUX_Unsensored"
+    elif split == "test":
+        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_test.json"
+        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_coco_5k"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_FLUX_Unsensored_5k"
+    elif split == "val":
+        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_validation.json"
+        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_coco_5k"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_FLUX_Unsensored_5k"
+
+    if modality == "text":
+        safe_texts, safe_image_paths, nsfw_texts, nsfw_image_paths = load_dataset(json_file, safe_img_dir,
+                                                                                  nsfw_image_dir)
+        safe_text_embeddings = extract_text_embeddings(safe_texts, clip_model, clip_tokenizer, device, batch_size=64)
+        nsfw_text_embeddings = extract_text_embeddings(nsfw_texts, clip_model, clip_tokenizer, device, batch_size=64)
+        analysis_label = "Text"
+        return safe_text_embeddings, nsfw_text_embeddings, analysis_label
+    elif modality == "image":
+        pass
