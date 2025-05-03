@@ -9,9 +9,9 @@ def generate_random_groups(total, group_size, num_groups):
     return groups
 
 # 生成随机组
-total = 150000
+total = 20000
 group_size = 75
-num_groups = 10000
+num_groups = 5000
 random_groups = generate_random_groups(total, group_size, num_groups)
 
 # 保存为 JSON 文件

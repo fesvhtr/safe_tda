@@ -168,10 +168,14 @@ def evaluate_on_test_set(model, test_loader, device="cuda", use_wandb=False):
 
 
 if __name__ == "__main__":
+
+    test = False
+    train = False
+    modality = "text"  # or "image"
+    tda_method = ["landscape", "image"]
+
     model_name = "ViT-L/14"  # or "longclip"
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    test = True
-    modality = "text"  # or "image"
     clip_model, clip_preprocess, clip_tokenizer = load_clip(model_name, device)
     print("-" * 30)
 
@@ -181,10 +185,10 @@ if __name__ == "__main__":
 
     train_set = TDAPatchDataset(
         nsfw_embeddings=nsfw_text_embeddings,
-        nsfw_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\train_patch_id_ns75g10000.json",
+        nsfw_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\train_patch_id_ns75g5000.json",
         safe_embeddings=safe_text_embeddings,
-        safe_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\train_patch_id_ss75g10000.json",
-        tda_method="landscape",
+        safe_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\train_patch_id_ss75g5000.json",
+        tda_method=tda_method,
         cache_path=r"H:\ProjectsPro\safe_tda\data\cache\text_patch_train.pt",
         plot=False,
         force_recompute=False
@@ -203,7 +207,7 @@ if __name__ == "__main__":
         nsfw_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\val_patch_id_ns75g500.json",
         safe_embeddings=safe_text_embeddings,
         safe_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\val_patch_id_ss75g500.json",
-        tda_method="landscape",
+        tda_method=tda_method,
         cache_path=r"H:\ProjectsPro\safe_tda\data\cache\text_patch_val.pt",
         plot=False,
         force_recompute=False
@@ -214,19 +218,19 @@ if __name__ == "__main__":
         _ = val_set[i]
 
     # 开始训练
-    train_loop(
-        train_dataset=train_set,
-        val_dataset=val_set,
-        input_dim=300,
-        epochs=100,
-        batch_size=64,
-        lr=1e-4,
-        device="cuda",
-        use_wandb=False,
-        save_path=r"H:\ProjectsPro\safe_tda\data\weights\nsfw_patch_best.pt"
-    )
+    if train:
+        train_loop(
+            train_dataset=train_set,
+            val_dataset=val_set,
+            input_dim=300,
+            epochs=100,
+            batch_size=64,
+            lr=1e-4,
+            device="cuda",
+            use_wandb=False,
+            save_path=r"H:\ProjectsPro\safe_tda\data\weights\nsfw_patch_best.pt"
+        )
 
-    test = True
     if test:
         safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model, clip_tokenizer, device,
                                                                         split="test", modality=modality)
@@ -236,14 +240,14 @@ if __name__ == "__main__":
             nsfw_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\test_patch_id_ns75g500.json",
             safe_embeddings=safe_text_embeddings,
             safe_group_indices_path=r"H:\ProjectsPro\safe_tda\data\dataset\patch_ids\test_patch_id_ss75g500.json",
-            tda_method="landscape",
+            tda_method=tda_method,
             cache_path=r"H:\ProjectsPro\safe_tda\data\cache\text_patch_test.pt",
             plot=False,
             force_recompute=False
         )
         print(f"Total dataset size: {len(test_set)}")
-        for _ in tqdm(range(len(test_set)), desc="Test cache"):
-            _ = test_set[_]
+        for i in tqdm(range(len(test_set)), desc="Test cache"):
+            _ = test_set[i]
         test_loader = DataLoader(test_set, batch_size=64)
         model = NSFWPatchMLPClassifier(input_dim=300).to(device)
         model.load_state_dict(torch.load(r"H:\ProjectsPro\safe_tda\data\weights\nsfw_patch_best.pt"))

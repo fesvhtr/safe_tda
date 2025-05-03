@@ -173,11 +173,11 @@ def load_embeddings(clip_model, clip_tokenizer, device, split="test", modality="
     elif split == "test":
         json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_test.json"
         safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_coco_5k"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_FLUX_Unsensored_5k"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_FLUX_Unsensored"
     elif split == "val":
         json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_validation.json"
         safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_coco_5k"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_FLUX_Unsensored_5k"
+        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_FLUX_Unsensored"
 
     if modality == "text":
         safe_texts, safe_image_paths, nsfw_texts, nsfw_image_paths = load_dataset(json_file, safe_img_dir,
