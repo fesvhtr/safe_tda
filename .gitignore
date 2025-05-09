@@ -51,4 +51,6 @@ runs/
 
 data/dataset
 data/cache
+data/cache_backup
 data/weights
+wandb/

@@ -82,7 +82,7 @@ def download_by_id(json_file, save_dir):
     download_tasks = []
     for item_ in tqdm(data):
         coco_id = item_["coco_id"]
-        url_prefix = "http://images.cocodataset.org/val2014/COCO_val2014_"
+        url_prefix = "http://images.cocodataset.org/train2014/COCO_train2014_"
         url_suffix = ".jpg"
         # fill coco_id with 12 digits with leading zeros
         # coco_id = str(coco_id).zfill(12)
@@ -101,8 +101,8 @@ def download_by_id(json_file, save_dir):
 
 if __name__ == "__main__":
     # 设置输出目录
-    output_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_coco"
-    json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train_5K.json"
+    output_dir = r"/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco_20k"
+    json_file = r"/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train_20K.json"
     # 启动下载，可以设置max_images参数来限制下载数量
     # 例如: download_coco_images(output_dir, max_images=100)
     # download_coco_images(output_dir)

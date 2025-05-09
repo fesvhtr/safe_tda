@@ -63,6 +63,9 @@ def load_dataset(json_file, safe_img_dir, nsfw_img_dir):
         safe_texts.append(safe_text)
         if os.path.exists(safe_img_path):
             safe_image_paths.append(safe_img_path)
+        else:
+            # TODO: add warning
+            pass
 
         nsfw_texts.append(nsfw_text)
         if os.path.exists(nsfw_img_path):
@@ -160,31 +163,36 @@ def extract_image_embeddings(image_paths, clip_model, preprocess, device="cuda",
     return image_features.cpu().numpy()
 
 
-def load_embeddings(clip_model, clip_tokenizer, device, split="test", modality="text"):
+def load_embeddings(clip_model,  clip_preprocess, clip_tokenizer, device, split="test", modality="text"):
     # load the raw dataset
     if split == "train5k":
-        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train_5k.json"
-        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_coco_5k"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_FLUX_Unsensored_5k"
+        json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train_5k.json"
+        safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco_5k"
+        nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_FLUX_Unsensored_5k"
     elif split == "train":
-        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_train.json"
-        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_coco"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\train_FLUX_Unsensored"
+        json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train.json"
+        safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco"
+        nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_FLUX_Unsensored"
     elif split == "test":
-        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_test.json"
-        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_coco_5k"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\test_FLUX_Unsensored"
+        json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_test.json"
+        safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/test_coco"
+        nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/test_FLUX_Unsensored"
     elif split == "val":
-        json_file = r"H:\ProjectsPro\safe_tda\data\dataset\ViSU-Text_validation.json"
-        safe_img_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_coco_5k"
-        nsfw_image_dir = r"H:\ProjectsPro\safe_tda\data\dataset\val_FLUX_Unsensored"
+        json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_validation.json"
+        safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/val_coco"
+        nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/val_FLUX_Unsensored"
 
-    if modality == "text":
-        safe_texts, safe_image_paths, nsfw_texts, nsfw_image_paths = load_dataset(json_file, safe_img_dir,
+    safe_texts, safe_image_paths, nsfw_texts, nsfw_image_paths = load_dataset(json_file, safe_img_dir,
                                                                                   nsfw_image_dir)
-        safe_text_embeddings = extract_text_embeddings(safe_texts, clip_model, clip_tokenizer, device, batch_size=64)
-        nsfw_text_embeddings = extract_text_embeddings(nsfw_texts, clip_model, clip_tokenizer, device, batch_size=64)
+    if modality == "text":
+        safe_text_embeddings = extract_text_embeddings(safe_texts, clip_model, clip_tokenizer, device, batch_size=128)
+        nsfw_text_embeddings = extract_text_embeddings(nsfw_texts, clip_model, clip_tokenizer, device, batch_size=128)
         analysis_label = "Text"
         return safe_text_embeddings, nsfw_text_embeddings, analysis_label
     elif modality == "image":
-        pass
+        safe_image_embeddings = extract_image_embeddings(safe_image_paths, clip_model, clip_preprocess, device,
+                                                          batch_size=32)
+        nsfw_image_embeddings = extract_image_embeddings(nsfw_image_paths, clip_model, clip_preprocess, device,
+                                                         batch_size=32)
+        analysis_label = "Image"
+        return safe_image_embeddings, nsfw_image_embeddings, analysis_label

@@ -125,4 +125,4 @@ def analyze_and_plot_tda(embeddings, label, complex="rips", max_filt_scale=1.5, 
     if plot:
         plot_persistence_diagram(persistence_intervals, title=f"Persistence Diagram ({label})")
         plot_betti_curves(threshold_values, betti_data, title=f"Betti Curve ({label})")
-    return persistence_intervals, betti_data
+    return persistence_intervals, betti_data, threshold_values
