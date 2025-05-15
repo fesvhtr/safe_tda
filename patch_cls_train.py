@@ -1,6 +1,6 @@
 from utils.dataset_utils import load_embeddings
 from utils.model_utils import load_clip
-from dataset.tda_patch_dataset import TDAPatchDataset
+from dataset.tda_patch_dataset import TDAPatchClsDataset
 from tqdm import tqdm
 from model.tda_models import *
 import torch
@@ -66,7 +66,7 @@ def eval_model(model, dataloader, loss_fn, device):
 
 
 def train_loop(train_dataset, val_dataset=None,
-               input_dim=850, epochs=10, batch_size=64,
+               input_dim=700, epochs=10, batch_size=64,
                lr=1e-4, device="cuda:3", save_path="best_model.pt", modality="text",
                use_wandb=False, wandb_project="safe_tda"):
     
@@ -184,12 +184,15 @@ if __name__ == "__main__":
     test = True
     train = True
     use_wandb = True
+    hybrid_train = True
+    hybrid_test = False
     modality = "text"  # or "image"
-    tda_method = ["landscape","image", "betti"]
+    tda_method = ["landscape","image"]
     return_mode = "concat"
+    id_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/"
 
     model_name = "ViT-L/14"  # or "longclip"
-    device = "cuda:3" if torch.cuda.is_available() else "cpu"
+    device = "cuda:2" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     clip_model, clip_preprocess, clip_tokenizer = load_clip(model_name, device)
     print("-" * 30)
@@ -198,51 +201,55 @@ if __name__ == "__main__":
         # --- Load the dataset ---
         safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer,  device, split="train",
                                                                         modality=modality)
-
-        # train set N=75
-        train_set = TDAPatchDataset(
-            nsfw_embeddings=nsfw_text_embeddings,
-            nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ns75g5000.json",  
-            safe_embeddings=safe_text_embeddings,
-            safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ss75g5000.json",
-            tda_method=tda_method,
-            cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_train.pkl",
-            plot=False,
-            return_mode=return_mode,
-        )
-        # train set Hybrid
-        # train_set = TDAPatchDataset(
-        #     nsfw_embeddings=nsfw_text_embeddings,
-        #     nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ns50-100g5000.json",  
-        #     safe_embeddings=safe_text_embeddings,
-        #     safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ss50-100g5000.json",
-        #     tda_method=tda_method,
-        #     cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_train.pkl",
-        #     plot=False,
-        #     return_mode=return_mode,
-        # )
+        if hybrid_train:
+            # train set Hybrid
+            train_set = TDAPatchClsDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                nsfw_group_indices_path= os.path.join(id_dir, "train_patch_id_ns50-100g5000.json"),
+                safe_embeddings=safe_text_embeddings,
+                safe_group_indices_path= os.path.join(id_dir, "train_patch_id_ss50-100g5000.json"),
+                tda_method=tda_method,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_train_hy.pkl",
+                plot=False,
+                return_mode=return_mode,
+            )
+        else:
+            # train set N=75
+            train_set = TDAPatchClsDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                nsfw_group_indices_path= os.path.join(id_dir, "train_patch_id_ns75g5000.json"),
+                safe_embeddings=safe_text_embeddings,
+                safe_group_indices_path= os.path.join(id_dir, "train_patch_id_ss75g5000.json"),
+                tda_method=tda_method,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_train.pkl",
+                plot=False,
+                return_mode=return_mode,
+            )
+        
         print(f"Total train set size: {len(train_set)}")
 
-        # TODO: Add validation set
         safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model,clip_preprocess, clip_tokenizer, device, split="val",
                                                                         modality=modality)
-        val_set = TDAPatchDataset(
-            nsfw_embeddings=nsfw_text_embeddings,
-            nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/val_patch_id_ns75g500.json",
-            safe_embeddings=safe_text_embeddings,
-            safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/val_patch_id_ss75g500.json",
-            tda_method=tda_method,
-            cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_val.pkl",
-            plot=False,
-            return_mode=return_mode,
-        )
+        if hybrid_test:
+            pass
+        else:
+            val_set = TDAPatchClsDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                nsfw_group_indices_path=os.path.join(id_dir, "val_patch_id_ns75g500.json"),
+                safe_embeddings=safe_text_embeddings,
+                safe_group_indices_path=os.path.join(id_dir, "val_patch_id_ss75g500.json"),
+                tda_method=tda_method,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_val.pkl",
+                plot=False,
+                return_mode=return_mode,
+            )
         print(f"Total val set size: {len(val_set)}")
 
 
         best_save_path = train_loop(
             train_dataset=train_set,
             val_dataset=val_set,
-            input_dim=850,
+            input_dim=700,
             epochs=100,
             batch_size=128,
             lr=1e-5,
@@ -255,19 +262,21 @@ if __name__ == "__main__":
     if test:
         safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer, device,
                                                                         split="test", modality=modality)
-
-        test_set = TDAPatchDataset(
-            nsfw_embeddings=nsfw_text_embeddings,
-            nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns75g500.json",
-            safe_embeddings=safe_text_embeddings,
-            safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss75g500.json",
-            tda_method=tda_method,
-            cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test.pkl",
-            plot=False,
-            return_mode=return_mode,
-        )
+        if hybrid_test:
+            pass
+        else:
+            test_set = TDAPatchClsDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                nsfw_group_indices_path=os.path.join(id_dir, "test_patch_id_ns75g500.json"),
+                safe_embeddings=safe_text_embeddings,
+                safe_group_indices_path=os.path.join(id_dir, "test_patch_id_ss75g500.json"),
+                tda_method=tda_method,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test.pkl",
+                plot=False,
+                return_mode=return_mode,
+            )
         test_loader = DataLoader(test_set, batch_size=64)
-        model = NSFWPatchMLPClassifierL(input_dim=850).to(device)
+        model = NSFWPatchMLPClassifierL(input_dim=700).to(device)
         model.load_state_dict(torch.load(best_save_path))
         evaluate_on_test_set(
             model=model,

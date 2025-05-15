@@ -169,6 +169,10 @@ def load_embeddings(clip_model,  clip_preprocess, clip_tokenizer, device, split=
         json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train_5k.json"
         safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco_5k"
         nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_FLUX_Unsensored_5k"
+    elif split == "traink":
+        json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train_5k.json"
+        safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco_5k"
+        nsfw_image_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_FLUX_Unsensored_5k"
     elif split == "train":
         json_file = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/ViSU-Text_train.json"
         safe_img_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/train_coco"

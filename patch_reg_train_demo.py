@@ -63,7 +63,7 @@ def eval_model(model, dataloader, loss_fn, device):
 
 
 def train_loop(train_dataset, val_dataset=None,
-               input_dim=700, epochs=10, batch_size=64,
+               input_dim=850, epochs=10, batch_size=64,
                lr=1e-4, device="cuda:3", save_path="best_model.pt", modality="text",
                use_wandb=False, wandb_project="safe_tda_re"):
     
@@ -165,6 +165,7 @@ def evaluate_on_test_set(model, test_loader, device="cuda:3", use_wandb=False):
     }
 
 
+
 if __name__ == "__main__":
     # --- Keep these initial settings ---
     os.environ["WANDB_API_KEY"] = "da3ef2608ceaa362d6e40d1d92b4e4e6ebbe9f82" # Temporary environment variable override
@@ -199,30 +200,17 @@ if __name__ == "__main__":
 
     # 2. Create ONE TDAPatchClsDataset instance using the 'test' data paths
     print("Creating dataset from 'test' data...")
-    # full_dataset = TDAPatchClsDataset(
-    #     nsfw_embeddings=nsfw_embeddings,
-    #     # Use the paths corresponding to your original test set
-    #     nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns75g500.json", 
-    #     safe_embeddings=safe_embeddings,
-    #     safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss75g500.json",
-    #     tda_method=tda_method,
-    #     # Use a cache path specific to this demo setup if desired, or keep the test one
-    #     cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test.pkl",
-    #     plot=False,
-    #     return_mode=return_mode,
-    # )
-    full_dataset = TDAPatchClsDataset(
+    full_dataset = TDAPatchRegDataset(
         nsfw_embeddings=nsfw_embeddings,
-        # Use the paths corresponding to your original test set
-        nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns50-100g1000.json", 
         safe_embeddings=safe_embeddings,
-        safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss50-100g1000.json",
+        mix_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_mix50-100g1000.json",
         tda_method=tda_method,
-        # Use a cache path specific to this demo setup if desired, or keep the test one
-        cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test_hy.pkl",
-        plot=False,
         return_mode=return_mode,
+        cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_reg_patch_test_hy.pkl",
+        plot=False,
+        force_recompute=False
     )
+
     print(f"Full dataset size (from original test set): {len(full_dataset)}")
 
 
@@ -251,7 +239,7 @@ if __name__ == "__main__":
             train_dataset=demo_train_set,   # Use demo train set
             val_dataset=demo_val_set,     # Use demo val set
             input_dim=850,                # Keep original parameters or adjust if needed
-            epochs=50,                    # Keep original parameters or adjust for demo
+            epochs=200,                    # Keep original parameters or adjust for demo
             batch_size=128,               # Keep original parameters or adjust for demo
             lr=1e-4,
             device=device,

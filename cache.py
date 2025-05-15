@@ -1,6 +1,6 @@
 import os
 import torch
-# import numpy as np # TDAPatchDataset handles numpy internally if needed
+# import numpy as np # TDAPatchClsDataset handles numpy internally if needed
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 try:
     from utils.dataset_utils import load_embeddings
     from utils.model_utils import load_clip
-    from dataset.tda_patch_dataset import TDAPatchDataset
+    from dataset.tda_patch_dataset import TDAPatchClsDataset
 except ImportError as e:
     print(f"错误：无法导入项目模块: {e}")
     print("请确保脚本运行在正确的目录，或者你的项目路径在 PYTHONPATH 中。")
@@ -22,10 +22,10 @@ except ImportError as e:
 
 
 # --- 1. 在这里硬编码你的参数 ---
-MODALITY = "text"  # 或 "image"
+MODALITY = "image"  # 或 "image"
 TDA_METHOD = ["landscape", "image", "betti", "stats"] # 必须是列表
 MODEL_NAME = "ViT-L/14"  # 或 "longclip"
-DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda:1" if torch.cuda.is_available() else "cpu"
 
 # 基础项目路径 (如果你的数据/代码结构不同，请修改)
 BASE_PROJECT_PATH = "/home/muzammal/Projects/safe_proj/safe_tda" # !! 修改为你的实际路径 !!
@@ -82,9 +82,9 @@ if __name__ == "__main__":
     print("-" * 30)
 
     # --- 1. 缓存训练集 ---
-    print("正在加载 训练集 嵌入向量...")
-    safe_emb_train, nsfw_emb_train, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer, DEVICE, split="train", modality=MODALITY)
-    # train_set = TDAPatchDataset(
+    # print("正在加载 训练集 嵌入向量...")
+    # safe_emb_train, nsfw_emb_train, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer, DEVICE, split="train", modality=MODALITY)
+    # train_set = TDAPatchClsDataset(
     #     nsfw_embeddings=nsfw_emb_train,
     #     nsfw_group_indices_path=TRAIN_NSFW_INDICES,
     #     safe_embeddings=safe_emb_train,
@@ -95,25 +95,25 @@ if __name__ == "__main__":
     #     force_recompute=FORCE_RECOMPUTE_CACHE # 使用脚本顶部的设置
     # )
 
-    train_set = TDAPatchDataset(
-        nsfw_embeddings=nsfw_emb_train,
-        nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ns50-100g5000.json",  
-        safe_embeddings=safe_emb_train,
-        safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ss50-100g5000.json",
-        tda_method=TDA_METHOD,
-        cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{MODALITY}_patch_train_hy.pkl",
-        plot=False,
-        force_recompute=FORCE_RECOMPUTE_CACHE
-    )
-    cache_dataset("训练集", train_set)
-    # 清理内存 (如果嵌入向量很大)
-    del safe_emb_train, nsfw_emb_train
-    if 'cuda' in DEVICE: torch.cuda.empty_cache()
+    # train_set = TDAPatchClsDataset(
+    #     nsfw_embeddings=nsfw_emb_train,
+    #     nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ns50-100g5000.json",  
+    #     safe_embeddings=safe_emb_train,
+    #     safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_ss50-100g5000.json",
+    #     tda_method=TDA_METHOD,
+    #     cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{MODALITY}_patch_train_hy.pkl",
+    #     plot=False,
+    #     force_recompute=FORCE_RECOMPUTE_CACHE
+    # )
+    # cache_dataset("训练集", train_set)
+    # # 清理内存 (如果嵌入向量很大)
+    # del safe_emb_train, nsfw_emb_train
+    # if 'cuda' in DEVICE: torch.cuda.empty_cache()
 
     # # --- 2. 缓存验证集 ---
     # print("\n正在加载 验证集 嵌入向量...")
     # safe_emb_val, nsfw_emb_val, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer, DEVICE, split="val", modality=MODALITY)
-    # val_set = TDAPatchDataset(
+    # val_set = TDAPatchClsDataset(
     #     nsfw_embeddings=nsfw_emb_val,
     #     nsfw_group_indices_path=VAL_NSFW_INDICES,
     #     safe_embeddings=safe_emb_val,
@@ -128,9 +128,9 @@ if __name__ == "__main__":
     # if 'cuda' in DEVICE: torch.cuda.empty_cache()
 
     # --- 3. 缓存测试集 ---
-    # print("\n正在加载 测试集 嵌入向量...")
-    # safe_emb_test, nsfw_emb_test, _ = load_embeddings(clip_model, clip_preprocess, clip_tokenizer, DEVICE, split="test", modality=MODALITY)
-    # test_set = TDAPatchDataset(
+    print("\n正在加载 测试集 嵌入向量...")
+    safe_emb_test, nsfw_emb_test, _ = load_embeddings(clip_model, clip_preprocess, clip_tokenizer, DEVICE, split="test", modality=MODALITY)
+    # test_set = TDAPatchClsDataset(
     #     nsfw_embeddings=nsfw_emb_test,
     #     nsfw_group_indices_path=TEST_NSFW_INDICES,
     #     safe_embeddings=safe_emb_test,
@@ -140,6 +140,16 @@ if __name__ == "__main__":
     #     plot=False,
     #     force_recompute=FORCE_RECOMPUTE_CACHE # 使用脚本顶部的设置
     # )
-    # cache_dataset("测试集", test_set)
-    # print("dataset len:", len(test_set))
-    # print("\n--- 所有缓存任务已完成 ---")
+    test_set = TDAPatchClsDataset(
+        nsfw_embeddings=nsfw_emb_test,
+        nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns50-100g1000.json",  
+        safe_embeddings=safe_emb_test,
+        safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss50-100g1000.json",
+        tda_method=TDA_METHOD,
+        cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{MODALITY}_patch_test_hy.pkl",
+        plot=False,
+        force_recompute=FORCE_RECOMPUTE_CACHE
+    )
+    cache_dataset("测试集", test_set)
+    print("dataset len:", len(test_set))
+    print("\n--- 所有缓存任务已完成 ---")

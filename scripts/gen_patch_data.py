@@ -25,10 +25,10 @@ def generate_variable_size_groups(total, min_group_size, max_group_size, num_gro
     return groups
 
 # --- 参数设置 ---
-total_items = 20000  # 总的可选项目数量
+total_items = 5000  # 总的可选项目数量
 min_n_size = 50     # 组大小的最小值 (N_min)
 max_n_size = 100    # 组大小的最大值 (N_max)
-num_groups_to_generate = 5000 # 要生成的组的数量
+num_groups_to_generate = 1000 # 要生成的组的数量
 
 # 生成随机组
 print(f"正在生成 {num_groups_to_generate} 个随机组...")
@@ -49,7 +49,7 @@ if not os.path.exists(output_directory):
     print(f"创建目录: {output_directory}")
 
 # 文件名可以这样表示范围，或者你选择其他方式
-output_filename = f"train_patch_id_ns{min_n_size}-{max_n_size}g{num_groups_to_generate}.json"
+output_filename = f"test_patch_id_ss{min_n_size}-{max_n_size}g{num_groups_to_generate}.json"
 output_path = os.path.join(output_directory, output_filename)
 
 with open(output_path, "w") as f:

@@ -63,7 +63,7 @@ def eval_model(model, dataloader, loss_fn, device):
 
 
 def train_loop(train_dataset, val_dataset=None,
-               input_dim=700, epochs=10, batch_size=64,
+               input_dim=850, epochs=10, batch_size=64,
                lr=1e-4, device="cuda:3", save_path="best_model.pt", modality="text",
                use_wandb=False, wandb_project="safe_tda_re"):
     
@@ -165,127 +165,117 @@ def evaluate_on_test_set(model, test_loader, device="cuda:3", use_wandb=False):
     }
 
 
+
+
 if __name__ == "__main__":
-    # --- Keep these initial settings ---
-    os.environ["WANDB_API_KEY"] = "da3ef2608ceaa362d6e40d1d92b4e4e6ebbe9f82" # Temporary environment variable override
-    # wandb.login(relogin=True)
+    os.environ["WANDB_API_KEY"] = "da3ef2608ceaa362d6e40d1d92b4e4e6ebbe9f82"
 
-    # Set train=True to run the demo training loop
-    train = True 
-    # Set test=True to run the evaluation on the demo test split
-    test = True  
+    test = True
+    train = True
     use_wandb = True
-    modality = "image"  # or "image"
-    tda_method = ["landscape", "image", "betti"]  # or ["landscape", "image", "betti", "stats"]
-    return_mode = "concat"  # or "first"
-    model_name = "ViT-L/14"  # or "longclip"
-    device = "cuda:1" if torch.cuda.is_available() else "cpu"
+    hybrid_train = True
+    hybrid_test = False
+    modality = "text"
+    tda_method = ["landscape", "image", "betti"] # ["landscape", "image", "betti", "stats"]
+    return_mode = "concat"
+    id_dir = "/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/"
+    model_name = "ViT-L/14"
+    device = "cuda:2" if torch.cuda.is_available() else "cpu"
 
 
+    # print(f"Using device: {device}")
     # clip_model, clip_preprocess, clip_tokenizer = load_clip(model_name, device)
     # print("-" * 30)
 
-    # # --- Modifications Start Here ---
-
-    # # 1. Load ONLY the original 'test' set embeddings
-    # print("Loading original 'test' set embeddings for demo...")
-    # safe_embeddings, nsfw_embeddings, _ = load_embeddings(
-    #     clip_model,  clip_preprocess, clip_tokenizer, device, split="test", # Use 'test' split here
-    #     modality=modality
-    # )
-    # print("Embeddings loaded.")
-
-    safe_embeddings, nsfw_embeddings = None, None  # Placeholder for actual embeddings
-
-    # 2. Create ONE TDAPatchClsDataset instance using the 'test' data paths
-    print("Creating dataset from 'test' data...")
-    # full_dataset = TDAPatchClsDataset(
-    #     nsfw_embeddings=nsfw_embeddings,
-    #     # Use the paths corresponding to your original test set
-    #     nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns75g500.json", 
-    #     safe_embeddings=safe_embeddings,
-    #     safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss75g500.json",
-    #     tda_method=tda_method,
-    #     # Use a cache path specific to this demo setup if desired, or keep the test one
-    #     cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test.pkl",
-    #     plot=False,
-    #     return_mode=return_mode,
-    # )
-    full_dataset = TDAPatchClsDataset(
-        nsfw_embeddings=nsfw_embeddings,
-        # Use the paths corresponding to your original test set
-        nsfw_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ns50-100g1000.json", 
-        safe_embeddings=safe_embeddings,
-        safe_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_ss50-100g1000.json",
-        tda_method=tda_method,
-        # Use a cache path specific to this demo setup if desired, or keep the test one
-        cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_patch_test_hy.pkl",
-        plot=False,
-        return_mode=return_mode,
-    )
-    print(f"Full dataset size (from original test set): {len(full_dataset)}")
-
-
-    # 4. Split the dataset into demo train, validation, and test sets (80/10/10)
-    total_size = len(full_dataset)
-    train_size = int(0.8 * total_size)
-    val_size = int(0.1 * total_size)
-    test_size = total_size - train_size - val_size # Ensure all data is used
-
-    print(f"Splitting into: Train={train_size}, Val={val_size}, Test={test_size}")
-    # Use a fixed generator for reproducible splits
-    generator = torch.Generator().manual_seed(42) 
-    demo_train_set, demo_val_set, demo_test_set = torch.utils.data.random_split(
-        full_dataset, [train_size, val_size, test_size], generator=generator
-    )
-    print("Dataset split complete.")
-
-    # --- Modifications End Here ---
-
-    best_save_path = None # Initialize variable
-
     if train:
-        print("\n--- Starting Demo Training Loop ---")
-        # 5. Call train_loop with the demo splits
-        best_save_path = train_loop(
-            train_dataset=demo_train_set,   # Use demo train set
-            val_dataset=demo_val_set,     # Use demo val set
-            input_dim=850,                # Keep original parameters or adjust if needed
-            epochs=50,                    # Keep original parameters or adjust for demo
-            batch_size=128,               # Keep original parameters or adjust for demo
-            lr=1e-4,
-            device=device,
-            use_wandb=use_wandb,
-            modality=f"{modality}_demo", # Add demo suffix to modality for wandb/saving
-            save_path="/home/muzammal/Projects/safe_proj/safe_tda/data/weights" # Original path, filename includes modality
-        )
-        print("--- Demo Training Loop Finished ---")
+        # --- Load the dataset ---
+        # safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer,  device, split="train",
+        #                                                                 modality=modality)
+        safe_text_embeddings, nsfw_text_embeddings = None, None
+        if hybrid_train:
+            # train set Hybrid
+            train_set = TDAPatchRegDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                safe_embeddings=safe_text_embeddings,
+                mix_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_mix50-100g10000.json",
+                tda_method=tda_method,
+                return_mode=return_mode,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_reg_patch_train_hy.pkl",
+                plot=False,
+                force_recompute=False
+            )
+        
+        else:
+            # train set N=75
+            train_set = TDAPatchRegDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                safe_embeddings=safe_text_embeddings,
+                mix_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/train_patch_id_mix75g10000.json",
+                tda_method=tda_method,
+                return_mode=return_mode,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_reg_patch_train.pkl",
+                plot=False,
+                force_recompute=False
+            )
+        
+        print(f"Total train set size: {len(train_set)}")
 
+        # safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model,clip_preprocess, clip_tokenizer, device, split="val",
+        #                                                                 modality=modality)
+        safe_text_embeddings, nsfw_text_embeddings = None, None
+        if hybrid_test:
+            pass
+        else:
+            val_set = TDAPatchRegDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                safe_embeddings=safe_text_embeddings,
+                mix_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/val_patch_id_mix75g1000.json",
+                tda_method=tda_method,
+                return_mode=return_mode,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_reg_patch_val.pkl",
+                plot=False,
+                force_recompute=False
+            )
+        print(f"Total val set size: {len(val_set)}")
+
+
+        best_save_path = train_loop(
+            train_dataset=train_set,
+            val_dataset=val_set,
+            input_dim=850,
+            epochs=200,
+            batch_size=128,
+            lr=1e-5,
+            device="cuda",
+            use_wandb=use_wandb,
+            modality=modality,
+            save_path="/home/muzammal/Projects/safe_proj/safe_tda/data/weights"
+        )
 
     if test:
-        print("\n--- Starting Evaluation on Demo Test Set ---")
-        if best_save_path is None or not os.path.exists(best_save_path):
-             print(f"Error: Model file not found at {best_save_path}. Cannot run test evaluation.")
-             # Optional: Load a default/pre-existing model for testing if training didn't run
-             # best_save_path = "path/to/some/existing_demo_model.pt" 
+        # safe_text_embeddings, nsfw_text_embeddings, _ = load_embeddings(clip_model, clip_preprocess,clip_tokenizer, device,
+        #                                                                 split="test", modality=modality)
+        safe_text_embeddings, nsfw_text_embeddings = None, None
+        if hybrid_test:
+            pass
         else:
-            # 6. Evaluate on the demo test split
-            # Create DataLoader for the demo test set
-            demo_test_loader = DataLoader(demo_test_set, batch_size=64) 
-            
-            # Load the model saved during the demo training
-            model = NSFWPatchMLPClassifierL(input_dim=850).to(device)
-            print(f"Loading model from: {best_save_path}")
-            model.load_state_dict(torch.load(best_save_path, map_location=device)) # Use map_location for flexibility
-
-            evaluate_on_test_set(
-                model=model,
-                test_loader=demo_test_loader, # Use the demo test loader
-                device=device,
-                use_wandb=use_wandb,
+            test_set = TDAPatchRegDataset(
+                nsfw_embeddings=nsfw_text_embeddings,
+                safe_embeddings=safe_text_embeddings,
+                mix_group_indices_path="/home/muzammal/Projects/safe_proj/safe_tda/data/dataset/patch_ids/test_patch_id_mix75g1000.json",
+                tda_method=tda_method,
+                return_mode=return_mode,
+                cache_path=f"/home/muzammal/Projects/safe_proj/safe_tda/data/cache/{modality}_reg_patch_test.pkl",
+                plot=False,
+                force_recompute=False
             )
-        print("--- Demo Test Evaluation Finished ---")
-
-    if use_wandb:
-        wandb.finish()
-    print("Script finished.")
+        test_loader = DataLoader(test_set, batch_size=64)
+        model = NSFWPatchMLPClassifierL(input_dim=850).to(device)
+        model.load_state_dict(torch.load(best_save_path))
+        evaluate_on_test_set(
+            model=model,
+            test_loader=test_loader,
+            device=device,
+            use_wandb=use_wandb,
+        )
+    wandb.finish()
