@@ -54,4 +54,4 @@ data/cache
 data/cache_backup
 data/weights
 wandb/
-!data/dataset/patch_ids
+!data/dataset/patch_ids/**
